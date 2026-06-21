@@ -1,5 +1,18 @@
 # CPC354 - Computer Graphics (Assignment 1)
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-WebGL%20%26%20JS-990000?style=for-the-badge&logo=webgl&logoColor=white" alt="Language" />
+  <img src="https://img.shields.io/badge/Course-CPC354-24292e?style=for-the-badge" alt="Course" />
+  <a href="https://github.com/ahmedtags">
+    <img src="https://img.shields.io/badge/Profile-ahmedtags-D9A34A?style=for-the-badge&logo=github&logoColor=white" alt="Profile" />
+  </a>
+  <a href="https://blxman-37fy.vercel.app/">
+    <img src="https://img.shields.io/badge/Portfolio-blxman--37fy-0A66C2?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Portfolio" />
+  </a>
+</p>
+
+---
+
 This repository contains the interactive WebGL application implementation and PDF report for **CPC354: Computer Graphics - Assignment 1** (Semester 1, Academic Session 2025/2026) at Universiti Sains Malaysia (USM).
 
 ## Course Details
@@ -64,4 +77,3 @@ The TV Ident sequence follows a structured cycle when started:
 3. **ROTATE_LEFT:** Rotate 180° counter-clockwise around the Y-axis.
 4. **RETURN_2:** Return to the starting position.
 5. **SCALE_UP:** Scale up (zoom in) the 3D letters to fill the screen as a final TV transition.
-
