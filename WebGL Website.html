@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Word Logo - Complete with Full UI Controls</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .main-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .display-section {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #canvas-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .controls-section {
+            flex: 1;
+            width: 620px;
+        }
+        #canvas-container {
+            text-align: center;
+            margin: 20px auto;
+        }
+        canvas {
+        
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            border: 2px solid #333;
+            background-color: white;
+
+        }
+
+        .info {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+        }
+        .controls {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+        }
+        .control-group {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 15px;
+        }
+        .control-row label {
+            min-width: 150px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            padding: 8px;
+            font-size: 16px;
+            width: 200px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="range"] {
+            width: 200px;
+            height: 6px;
+        }
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .slider-value {
+            min-width: 50px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .button-group {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.stop {
+            background-color: #f44336;
+        }
+        button.stop:hover {
+            background-color: #da190b;
+        }
+        button.reset {
+            background-color: #ff9800;
+        }
+        button.reset:hover {
+            background-color: #e68900;
+        }
+        .status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+        .status strong {
+            color: #2e7d32;
+        }
+        h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+        .color-picker-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-item span {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="display-section">
+            <div class="info">
+                <h1>3D Word Logo - Complete TV Ident with Full UI Controls</h1>
+                <p><strong>Interactive Controls:</strong> Adjust depth, speed, outlines and colors in real-time! Press <strong>"R"</strong> on keyboard to reset animation, and <strong>SpaceBar</strong> to start/pause/resume the animation.</p>
+            </div>
+
+            <div class="status" id="statusDisplay">
+                <strong>Status:</strong> <span id="animationStatus">Ready - Click "Start Animation"</span>
+            </div>
+
+            <div id="canvas-container">
+                <canvas id="webgl-canvas" width="800" height="600"></canvas>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls">
+                <!-- Word Input -->
+                <div class="control-group">
+                    <h3>Word Settings</h3>
+                    <div class="control-row">
+                        <label>Word (C, A, R, T) only:</label>
+                        <input type="text" id="wordInput" value="CART" maxlength="4" placeholder="e.g. CART">
+                        <button onclick="updateWord()">Update Word</button>
+                    </div>
+                </div>
+
+                <!-- Geometry Controls -->
+                <div class="control-group">
+                    <h3>Geometry Controls</h3>
+                    <div class="control-row">
+                        <label>Extrusion Depth:</label>
+                        <input type="range" id="depthSlider" min="0." max="0.5" step="0.01" value="0.15" oninput="updateDepth()">
+                        <span class="slider-value" id="depthValue">0.15</span>
+                    </div>
+                </div>
+
+                <!-- Animation Controls -->
+                <div class="control-group">
+                    <h3>Animation Controls</h3>
+                    <div class="control-row">
+                        <label>Animation Speed:</label>
+                        <input type="range" id="speedSlider" min="0.5" max="5" step="0.1" value="2.0" oninput="updateSpeed()">
+                        <span class="slider-value" id="speedValue">2.0x</span>
+                    </div>
+                    <div class="control-row">
+                        <button onclick="startAnimation()">▶ Start/Resume Animation</button>
+                        <button class="stop" onclick="stopAnimation()">⏸ Stop</button>
+                        <button class="reset" onclick="resetAnimation()">↻ Reset</button>
+                    </div>
+                </div>
+
+                <!-- Outline Controls -->
+                <div class="control-group">
+                    <h3>Outline Controls</h3>
+                    <div class="control-row">
+                        <label>Show Outlines:</label>
+                        <input type="checkbox" id="outlineToggle" checked onchange="toggleOutlines()">
+                        <label for="outlineToggle">Enable Outlines</label>
+                    </div>
+                    <div class="control-row">
+                        <label>Outline Thickness:</label>
+                        <input type="range" id="outlineThickness" min="1" max="10" step="1" value="3" oninput="updateOutlineThickness()">
+                        <span class="slider-value" id="outlineThicknessValue">3</span>
+                    </div>
+                </div>
+
+                <!-- Color Controls -->
+                <div class="control-group">
+                    <h3>Color Controls</h3>
+                    <div class="control-row">
+                        <label>Letter Colors:</label>
+                        <div class="color-picker-group">
+                            <div class="color-item">
+                                <input type="color" id="color1" value="#e63946" onchange="updateColors()">
+                                <span>Letter 1</span>
+                            </div>
+                            <div class="color-item">
+                                <input type="color" id="color2" value="#2a9d8f" onchange="updateColors()">
+                                <span>Letter 2</span>
+                            </div>
+                            <div class="color-item">
+                                <input type="color" id="color3" value="#264653" onchange="updateColors()">
+                                <span>Letter 3</span>
+                            </div>
+                            <div class="color-item">
+                                <input type="color" id="color4" value="#e9c46a" onchange="updateColors()">
+                                <span>Letter 4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Vertex Shader: Transforms vertices and passes colors to fragment shader -->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        attribute vec4 vColor;
+        
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        
+        varying vec4 fColor;
+        
+        void main() {
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vPosition;
+            fColor = vColor;
+        }
+    </script>
+
+    <!-- Fragment Shader: Applies colors to pixels -->
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 fColor;
+        
+        void main() {
+            gl_FragColor = fColor;
+        }
+    </script>
+
+    <!-- Outline Vertex Shader: Renders outline edges -->
+    <script id="outline-vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        
+        void main() {
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vPosition;
+        }
+    </script>
+
+    <!-- Outline Fragment Shader: Renders black outlines -->
+    <script id="outline-fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        
+        void main() {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+    </script>
+
+    <!-- Include utilities -->
+    <script type="text/javascript" src="MV.js"></script>
+    <script type="text/javascript" src="initShaders.js"></script>
+
+    <script>
+        "use strict";
+        
+        // ========================================
+        // GLOBAL VARIABLES
+        // ========================================
+        
+        // Canvas and WebGL context
+        var canvas;
+        var gl;
+        var program;
+        
+        // Current word being displayed
+        var currentWord = "CART";
+        // Geometry data
+        var vertices = [];
+        var colors = [];
+        var indices = [];
+        
+        // UI Parameters
+        // User-controlled parameters
+        var extrusionDepth = 0.15;
+        var animationSpeed = 2.0;
+        var letterColors = [
+            { r: 0.9, g: 0.22, b: 0.27 },  // #e63946
+            { r: 0.16, g: 0.62, b: 0.56 }, // #2a9d8f
+            { r: 0.15, g: 0.27, b: 0.33 }, // #264653
+            { r: 0.91, g: 0.77, b: 0.42 }  // #e9c46a
+        ];
+        
+        // Buffer IDs
+        var vBuffer;
+        var cBuffer;
+        var iBuffer;
+        
+        // Uniform locations
+        var modelViewMatrixLoc;
+        var projectionMatrixLoc;
+        
+        // Animation state machine
+        var animationState = {
+            phase: 'IDLE',
+            rotation: 0,
+            targetRotation: 0,
+            scale: 1.0,
+            targetScale: 1.0,
+            hoverTime: 0,
+            isAnimating: false
+        };
+        
+        var ROTATION_SPEED = 2.0;
+        var SCALE_SPEED = 0.01;
+
+        // Outline variables
+        var showOutlines = true;
+        var outlineThickness = 3;
+        var outlineProgram;
+        var outlineModelViewMatrixLoc;
+        var outlineProjectionMatrixLoc;
+        
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        
+        window.onload = function init() {
+            // Get the canvas element from HTML
+            canvas = document.getElementById("webgl-canvas");
+            
+            gl = canvas.getContext('webgl');
+            if (!gl) {
+                alert("WebGL isn't available");
+            }
+            
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clearColor(0.95, 0.95, 0.95, 1.0);
+            // Enable depth testing (closer objects hide farther ones)
+            gl.enable(gl.DEPTH_TEST);
+            
+            // Initialize main shader program for rendering letters
+            program = initShaders(gl, "vertex-shader", "fragment-shader");
+            // Activate the main shader program
+            gl.useProgram(program);
+
+            // Initialize separate shader program for black outlines
+            outlineProgram = initShaders(gl, "outline-vertex-shader", "outline-fragment-shader");
+            
+            // Regenerate the 3D word with new depth
+            generateWord(currentWord, extrusionDepth);
+            // Update GPU buffers with new geometry
+            setupBuffers();
+            
+            // Get reference to model-view matrix uniform (camera & object transforms)
+            modelViewMatrixLoc = gl.getUniformLocation(program, "uModelViewMatrix");
+            // Get reference to projection matrix uniform (perspective)
+            projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
+
+            outlineModelViewMatrixLoc = gl.getUniformLocation(outlineProgram, "uModelViewMatrix");
+            outlineProjectionMatrixLoc = gl.getUniformLocation(outlineProgram, "uProjectionMatrix");
+            
+            console.log("WebGL Initialized with Full UI Controls!");
+            
+            // Start the animation loop
+            render();
+        };
+        
+        // ========================================
+        // UTILITY: HEX TO RGB
+        // ========================================
+        
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16) / 255,
+                g: parseInt(result[2], 16) / 255,
+                b: parseInt(result[3], 16) / 255
+            } : null;
+        }
+        
+        // ========================================
+        // LETTER GENERATOR
+        // ========================================
+        
+        function getLetterSegments(letter) {
+            var segments = {
+                'C': [
+                    [-0.165, 0.385, 0.1, 0.1], //Top Left
+                    [0.25, 0.385, 0.08, 0.1], //Top Right
+                    [0.275, 0.36, 0.065, 0.1], //Top Right 2
+                    [0.05, 0.4, 0.425, 0.1], //Top
+                    [-0.2, 0, 0.1, 0.8125], //Left
+                    [0.055, -0.4, 0.425, 0.1], //Bottom
+                    [-0.165, -0.385, 0.1, 0.1], //Bottom Left
+                    [0.25, -0.385, 0.08, 0.1], //Bottom Right
+                    [0.275, -0.36, 0.065, 0.1], //Bottom Right 2
+                ],
+                'A': [
+                    [-0.2, -0.1, 0.1, 0.7], //Left
+                    [0.2, -0.1, 0.1, 0.7], //Right
+                    [0, 0.4, 0.3, 0.1], //Top
+                    [0, 0.05, 0.3, 0.1], //Mid
+                    [-0.175, 0.25, 0.1, 0.3], //Top Left
+                    [0.175, 0.25, 0.1, 0.3] //Top Right
+                ],
+                'R': [
+                    [-0.2, 0, 0.1, 0.9], //Left
+                    [0.05, 0.4, 0.4, 0.1], //Top
+                    [0.05, 0.05, 0.4, 0.1], //Middle
+                    [0.25, 0.2, 0.1, 0.3], //Top Right
+                    [0.25, -0.33, 0.1, 0.25], //Bottom Right
+                    [0.21, -0.2, 0.1, 0.1], //Start of Tail
+                    [0.14, -0.16, 0.1, 0.1], //Tail
+                    [0.07, -0.12, 0.1, 0.1], //Tail
+                    [0, -0.07, 0.1, 0.1], //Tail
+                    [-0.07, -0.02, 0.1, 0.1] //End of Tail
+                ],
+                'T': [
+                    [-0.26, 0.385, 0.1, 0.115], //Top Left
+                    [0.26, 0.385, 0.08, 0.115], //Top Right
+                    [0, 0.4, 0.6, 0.1], //Top
+                    [0, 0, 0.1, 0.9] //Middle
+                ]
+            };
+            
+            return segments[letter] || [];
+        }
+        
+        function createSegmentBox(x, y, width, height, depth) {
+            var w = width / 2;
+            var h = height / 2;
+            var d = depth / 2;
+            
+            var boxVertices = [
+                vec4(x - w, y - h, d, 1.0),
+                vec4(x + w, y - h, d, 1.0),
+                vec4(x + w, y + h, d, 1.0),
+                vec4(x - w, y + h, d, 1.0),
+                vec4(x - w, y - h, -d, 1.0),
+                vec4(x + w, y - h, -d, 1.0),
+                vec4(x + w, y + h, -d, 1.0),
+                vec4(x - w, y + h, -d, 1.0)
+            ];
+            
+            var boxIndices = [
+                0, 1, 2,   0, 2, 3,
+                4, 6, 5,   4, 7, 6,
+                3, 2, 6,   3, 6, 7,
+                0, 5, 1,   0, 4, 5,
+                1, 5, 6,   1, 6, 2,
+                0, 3, 7,   0, 7, 4
+            ];
+            
+            return { vertices: boxVertices, indices: boxIndices };
+        }
+        
+        function generateLetter(letter, xOffset, depth) {
+            var segments = getLetterSegments(letter);
+            var letterVertices = [];
+            var letterIndices = [];
+            var vertexOffset = 0;
+            
+            for (var s = 0; s < segments.length; s++) {
+                var segment = segments[s];
+                var sx = segment[0];
+                var sy = segment[1];
+                var swidth = segment[2];
+                var sheight = segment[3];
+                
+                var box = createSegmentBox(sx + xOffset, sy, swidth, sheight, depth);
+                
+                for (var v = 0; v < box.vertices.length; v++) {
+                    letterVertices.push(box.vertices[v]);
+                }
+                
+                for (var i = 0; i < box.indices.length; i++) {
+                    letterIndices.push(box.indices[i] + vertexOffset);
+                }
+                
+                vertexOffset += 8;
+            }
+            
+            return { vertices: letterVertices, indices: letterIndices };
+        }
+        
+        // ========================================
+        // 3D LETTER GENERATION
+        // ========================================
+        
+        // Generate 3D geometry for text
+        function generateWord(word, depth) {
+            if (typeof depth === 'undefined') depth = extrusionDepth;
+            
+            word = word.toUpperCase();
+            vertices = [];
+            colors = [];
+            indices = [];
+            
+            var letterSpacing = 0.7;
+            var totalWidth = (word.length - 1) * letterSpacing;
+            // Start position to center the word
+            var startX = -totalWidth / 2;
+            
+            var vertexOffset = 0;
+            
+            for (var i = 0; i < word.length; i++) {
+                var letter = word[i];
+                var xOffset = startX + i * letterSpacing;
+                var letterData = generateLetter(letter, xOffset, depth);
+                
+                for (var v = 0; v < letterData.vertices.length; v++) {
+                    vertices.push(letterData.vertices[v]);
+                }
+                
+                for (var idx = 0; idx < letterData.indices.length; idx++) {
+                    indices.push(letterData.indices[idx] + vertexOffset);
+                }
+                
+                var color = letterColors[i % letterColors.length];
+                for (var c = 0; c < letterData.vertices.length; c++) {
+                    colors.push(vec4(color.r, color.g, color.b, 1.0));
+                }
+                
+                vertexOffset += letterData.vertices.length;
+            }
+        }
+        
+        // ========================================
+        // BUFFER SETUP
+        // ========================================
+        
+        // ========================================
+        // BUFFER MANAGEMENT
+        // ========================================
+        
+        // Transfer geometry data to GPU
+        function setupBuffers() {
+            // Create buffer for vertex positions
+            vBuffer = gl.createBuffer();
+            // Bind vertex buffer as active buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+            // Send vertex data to GPU memory
+            gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
+            
+            // Get reference to vPosition attribute in shader
+            var vPosition = gl.getAttribLocation(program, "vPosition");
+            // Configure how to read vertex data (4 floats per vertex)
+            gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+            // Enable the vertex position attribute
+            gl.enableVertexAttribArray(vPosition);
+            
+            // Create buffer for vertex colors
+            cBuffer = gl.createBuffer();
+            // Bind color buffer as active buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+            // Send color data to GPU memory
+            gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+            
+            // Get reference to vColor attribute in shader
+            var vColor = gl.getAttribLocation(program, "vColor");
+            gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(vColor);
+            
+            // Create buffer for triangle indices
+            iBuffer = gl.createBuffer();
+            // Bind index buffer for indexed drawing
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBuffer);
+            // Send triangle indices to GPU (defines which vertices form triangles)
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+        }
+        
+        // ========================================
+        // UI UPDATE FUNCTIONS
+        // ========================================
+        
+        // ========================================
+        // UI CONTROL HANDLERS
+        // ========================================
+        
+        function updateDepth() {
+            extrusionDepth = parseFloat(document.getElementById('depthSlider').value);
+            document.getElementById('depthValue').textContent = extrusionDepth.toFixed(2);
+            
+            // Regenerate word with new depth
+            generateWord(currentWord, extrusionDepth);
+            setupBuffers();
+            
+            console.log('Depth updated to: ' + extrusionDepth);
+        }
+        
+        function updateSpeed() {
+            animationSpeed = parseFloat(document.getElementById('speedSlider').value);
+            document.getElementById('speedValue').textContent = animationSpeed.toFixed(1) + 'x';
+            ROTATION_SPEED = 2.0 * animationSpeed;
+            SCALE_SPEED = 0.01 * animationSpeed;
+            
+            console.log('Speed updated to: ' + animationSpeed + 'x');
+        }
+        
+        function updateColors() {
+            letterColors[0] = hexToRgb(document.getElementById('color1').value);
+            letterColors[1] = hexToRgb(document.getElementById('color2').value);
+            letterColors[2] = hexToRgb(document.getElementById('color3').value);
+            letterColors[3] = hexToRgb(document.getElementById('color4').value);
+            
+            // Regenerate colors
+            generateWord(currentWord, extrusionDepth);
+            setupBuffers();
+            
+            console.log('Colors updated!');
+        }
+
+        function toggleOutlines() {
+            showOutlines = document.getElementById('outlineToggle').checked;
+            console.log('Outlines: ' + (showOutlines ? 'ON' : 'OFF'));
+        }
+
+        function updateOutlineThickness() {
+            outlineThickness = parseInt(document.getElementById('outlineThickness').value);
+            document.getElementById('outlineThicknessValue').textContent = outlineThickness;
+            console.log('Outline thickness: ' + outlineThickness);
+        }
+
+        // ========================================
+        // OUTLINE RENDERING
+        // ========================================
+        
+        // Draw black outlines around letters
+        function drawOutlines(modelViewMatrix, projectionMatrix) {
+            // Skip outline rendering if disabled
+            if (!showOutlines) return;
+            
+            // Save current shader program
+            var previousProgram = gl.getParameter(gl.CURRENT_PROGRAM);
+            // Switch to outline shader program
+            gl.useProgram(outlineProgram);
+
+            // Setup outline attributes
+            var outlinePosition = gl.getAttribLocation(outlineProgram, "vPosition");
+            gl.enableVertexAttribArray(outlinePosition);
+            gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+            gl.vertexAttribPointer(outlinePosition, 4, gl.FLOAT, false, 0, 0);
+
+            gl.uniformMatrix4fv(outlineProjectionMatrixLoc, false, flatten(projectionMatrix));
+            
+            // Enable polygon offset to prevent z-fighting
+            gl.enable(gl.POLYGON_OFFSET_LINE);
+            // Push lines slightly forward
+            gl.polygonOffset(-1.0, -1.0);
+            
+            // Draw outlines with thickness
+            // Draw multiple passes for thicker outlines
+            for (var i = 0; i < outlineThickness; i++) {
+                // Apply small offset for each thickness layer
+                var offsetMatrix = mult(modelViewMatrix, translate(i * 0.0015, i * 0.0015, 0.001));
+                gl.uniformMatrix4fv(outlineModelViewMatrixLoc, false, flatten(offsetMatrix));
+                drawAllPossibleEdges();
+            }
+            
+            // Restore state
+            // Disable polygon offset
+            gl.disable(gl.POLYGON_OFFSET_LINE);
+            // Restore previous shader program
+            gl.useProgram(previousProgram);
+            
+            
+        }
+
+        // Draw all edges of the 3D boxes
+        function drawAllPossibleEdges() {
+            // Define which vertices connect to form box edges (12 edges)
+            var boxEdges = [0,1, 1,2, 2,3, 3,0, 4,5, 5,6, 6,7, 7,4, 0,4, 1,5, 2,6, 3,7];
+            var edgeIndices = [];
+            // Calculate number of boxes (8 vertices per box)
+            var segments = vertices.length / 8;
+            
+            for (var s = 0; s < segments; s++) {
+                for (var e = 0; e < boxEdges.length; e++) {
+                    edgeIndices.push(boxEdges[e] + s * 8);
+                }
+            }
+            
+            var edgeBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, edgeBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(edgeIndices), gl.STATIC_DRAW);
+            // Draw all edges as lines
+            gl.drawElements(gl.LINES, edgeIndices.length, gl.UNSIGNED_SHORT, 0);
+            
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBuffer);
+            gl.deleteBuffer(edgeBuffer);
+        }
+        
+        // ========================================
+        // ANIMATION STATE MACHINE
+        // ========================================
+        
+        // Update animation based on current phase
+        function updateAnimationState() {
+            if (!animationState.isAnimating) return;
+            
+            switch(animationState.phase) {
+                case 'ROTATE_RIGHT': // First rotation (180° clockwise)
+                    // Increment rotation angle
+            animationState.rotation += ROTATION_SPEED;
+                    // Check if rotation reached 180 degrees
+            if (animationState.rotation >= 180) {
+                        animationState.rotation = 180;
+                        // Move to next phase
+                animationState.phase = 'RETURN_1';
+                        updateStatus('Returning to center...');
+                    }
+                    break;
+                    
+                case 'RETURN_1': // Return to center
+                    // Decrease rotation angle (rotating back)
+            animationState.rotation -= ROTATION_SPEED;
+                    if (animationState.rotation <= 0) {
+                        animationState.rotation = 0;
+                        animationState.phase = 'ROTATE_LEFT';
+                        updateStatus('Rotating LEFT 180°...');
+                    }
+                    break;
+                    
+                case 'ROTATE_LEFT': // Second rotation (180° counter-clockwise)
+                    animationState.rotation -= ROTATION_SPEED;
+                    if (animationState.rotation <= -180) {
+                        animationState.rotation = -180;
+                        animationState.phase = 'RETURN_2';
+                        updateStatus('Returning to center again...');
+                    }
+                    break;
+                    
+                case 'RETURN_2': // Return to center again
+                    animationState.rotation += ROTATION_SPEED;
+                    if (animationState.rotation >= 0) {
+                        animationState.rotation = 0;
+                        animationState.phase = 'SCALE_UP';
+                        animationState.targetScale = 2.5;
+                        updateStatus('Scaling up to full screen...');
+                    }
+                    break;
+                    
+                case 'SCALE_UP': // Scale up to fill screen
+                    // Increase scale (zoom in)
+            animationState.scale += SCALE_SPEED;
+                    // Check if reached target scale
+            if (animationState.scale >= animationState.targetScale) {
+                        animationState.scale = animationState.targetScale;
+                        animationState.phase = 'HOVER';
+                        animationState.hoverTime = 0;
+                        updateStatus('Hovering with gentle movement...');
+                    }
+                    break;
+                    
+                case 'HOVER': // Gentle hovering motion
+                    // Increment hover timer for smooth movement
+            animationState.hoverTime += 0.5 * animationSpeed;
+                    break;
+            }
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('animationStatus').textContent = message;
+        }
+        
+        // ========================================
+        // ANIMATION CONTROLS
+        // ========================================
+        
+        function startAnimation() {
+            if (animationState.phase === 'IDLE') {
+                animationState.phase = 'ROTATE_RIGHT';
+                animationState.isAnimating = true;
+                updateStatus('Rotating RIGHT 180°...');
+            } else if (!animationState.isAnimating) {
+                animationState.isAnimating = true;
+                updateStatus('Animation resumed');
+            }
+        }
+        
+        function stopAnimation() {
+            animationState.isAnimating = false;
+            updateStatus('Animation paused');
+        }
+        
+        function resetAnimation() {
+            animationState.phase = 'IDLE';
+            animationState.rotation = 0;
+            animationState.scale = 1.0;
+            animationState.hoverTime = 0;
+            animationState.isAnimating = false;
+            updateStatus('Ready - Click "Start Animation"');
+        }
+        
+        function updateWord() {
+            var input = document.getElementById('wordInput').value.toUpperCase();
+            
+            // Check if word length is valid (2-4 letters)
+            if (input.length < 2 || input.length > 4) {
+                alert('Please enter 2-4 letters!');
+                return;
+            }
+            
+            // Define allowed letters
+            var allowedLetters = ['C', 'A', 'R', 'T'];
+            // Check each letter is allowed
+            for (var i = 0; i < input.length; i++) {
+                // If letter not in allowed list, show error
+                if (allowedLetters.indexOf(input[i]) === -1) {
+                    alert('Invalid letter "' + input[i] + '"! Only C, A, R, T are allowed.');
+                    return;
+                }
+            }
+            
+            currentWord = input;
+            generateWord(currentWord, extrusionDepth);
+            setupBuffers();
+            resetAnimation();
+            
+            console.log('Word updated to: ' + currentWord);
+        }
+        
+        // ========================================
+        // RENDER FUNCTION
+        // ========================================
+        
+        // ========================================
+        // MAIN RENDER LOOP
+        // ========================================
+        
+        function render() {
+            updateAnimationState();
+            
+            // Clear the screen and depth buffer
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            
+            // Create perspective projection matrix (45° FOV)
+            var projectionMatrix = perspective(45, canvas.width / canvas.height, 0.1, 100.0);
+            
+            // Set camera distance (farther during hover for better view)
+            var distance = animationState.phase === 'HOVER' ? 8 : 4;
+            // Position camera looking at origin from (0, 0, distance)
+            var modelViewMatrix = lookAt(vec3(0, 0, distance), vec3(0, 0, 0), vec3(0, 1, 0));
+            
+            // Apply scaling transformation
+            modelViewMatrix = mult(modelViewMatrix, scale(animationState.scale, animationState.scale, animationState.scale));
+            
+            if (animationState.phase === 'HOVER') {
+                // Calculate smooth Y-axis rotation using sine wave
+                var hoverRotY = Math.sin(radians(animationState.hoverTime * 0.5)) * 15;
+                // Calculate smooth X-axis rotation using cosine wave
+                var hoverRotX = Math.cos(radians(animationState.hoverTime * 0.7)) * 10;
+                
+                // Apply Y-axis rotation
+                modelViewMatrix = mult(modelViewMatrix, rotateY(hoverRotY));
+                // Apply X-axis rotation
+                modelViewMatrix = mult(modelViewMatrix, rotateX(hoverRotX));
+            } else {
+                // Apply rotation around Y-axis
+                modelViewMatrix = mult(modelViewMatrix, rotateY(animationState.rotation));
+            }
+            
+            gl.useProgram(program);
+            // Send projection matrix to shader
+            gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
+            // Send model-view matrix to shader
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+            
+            // Draw all triangles using indexed rendering
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+            // Draw black outlines on top of the letters
+            drawOutlines(modelViewMatrix, projectionMatrix);
+
+            requestAnimationFrame(render); // Loop continuously
+        }
+
+        // ========================================
+        // KEYBOARD CONTROLS
+        // ========================================
+        
+        // Spacebar -> Start/Pause
+        window.addEventListener("keydown", function(event) {
+            if (event.code === "Space") {
+                // Prevent page scrolling when spacebar pressed
+                event.preventDefault(); // prevent page from scrolling
+                // If currently animating, pause it
+                if (animationState.isAnimating) {
+                    stopAnimation();
+                }   
+                // Otherwise, start or resume animation
+                else {
+                    startAnimation();
+                }
+            }
+        // R -> Reset animation
+            if (event.key === "r" || event.key === "R") {
+             resetAnimation();
+            }
+        }
+);
+
+    </script>
+</body>
+</html>
